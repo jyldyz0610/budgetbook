@@ -1,10 +1,18 @@
 import { ConfigModule } from '@nestjs/config';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ExpenseModule } from './expense/expense.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus'
+import { LoggerMiddleware } from './middleware/logger.middleware';
+
 
 @Module({
   imports: [
+    PrometheusModule.register({
+      defaultMetrics: {
+        enabled: false,
+      }
+    }),
     ConfigModule.forRoot({
       envFilePath: '.env.' + process.env.NODE_ENV,
     }),
@@ -19,8 +27,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       autoLoadEntities: true,
       synchronize: true, // wird auf false gesetzt, wenn wird das deployen werden
     }),
-  ],
-  controllers: [],
-  providers: [],
+  ]
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
