@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.expense.deployment.metadata.name }}
+  name: {{ .Values.expense.deployment.metadata.name }}
+  namespace: {{ .Values.expense.deployment.metadata.namespace }}
+spec:
+  replicas: {{ .Values.expense.deployment.spec.replicas}}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.expense.deployment.metadata.name  }}
+ 
+    spec:
+      containers:
+        - image: {{ .Values.expense.deployment.metadata.template.spec.containers.image.name }}:{{ .Values.expense.deployment.metadata.template.spec.containers.image.tag }}
+          imagePullPolicy: {{  .Values.expense.deployment.metadata.template.spec.containers.image.PullPolicy}}
+          resources:
+            cpu: {{ .Values.expense.deployment.metadata.template.spec.containers.resources.cpu.requests }}
+            cpu: {{ .Values.expense.deployment.metadata.template.spec.containers.resources.cpu.limits }}
+            memory: {{ .Values.expense.deployment.metadata.template.spec.containers.resources.memory.requests }}
+            memory: {{ .Values.expense.deployment.metadata.template.spec.containers.resources.memory.limits }}
+          env: 
+            {{- range .Values.expense.deployment.metadata.template.spec.containers.env  }}
+          name: {{ .Values.expense.deployment.metadata.template.spec.containers.name }}
+          {{- end }}
+          name: {{ .Values.expense.deployment.metadata.name }}
+          ports:
+            - name: {{ .Values.expense.deployment.metadata.template.spec.containers.ports.name }}
+              containerPort: {{ .Values.expense.deployment.metadata.template.spec.containers.ports.port }}
+              protocol: {{ .Values.expense.deployment.metadata.template.spec.containers.ports.protocol }}
+
+

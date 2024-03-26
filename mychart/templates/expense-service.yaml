@@ -1,0 +1,17 @@
+  apiVersion: v1
+  kind: service
+  metadata:
+    name: {{ .Values.expense.service.metadata.name }}
+    annotations:
+      prometheus.io/scrape: {{ .Values.service.metadata.annotations.prometheus.io/scrape }}
+      prometheus.io/scheme: {{ .Values.service.metadata.annotations.prometheus.io/scheme }}
+      prometheus.io/path: {{ .Values.service.metadata.annotations.prometheus.io/path }}
+      prometheus.io/port: {{ .Values.service.metadata.annotations.prometheus.io/port }}
+  spec:
+    selector:
+      app: {{ .Values.expense.service.metadata.name }}
+    ports:
+    - name: {{ .Values.expense.service.spec.ports.name }}
+      port: {{ .Values.expense.service.spec.ports.port }}
+      targetPort: {{ .Values.expense.service.spec.ports.targetPort }}
+  
