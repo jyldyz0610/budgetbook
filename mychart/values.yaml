@@ -1,62 +1,217 @@
-app:
-  name: auth
-  replicaCount: 1
-  namespace: test2
+auth:
+  deployment:
+    metadata:
+      name: auth
+      namespace: test2
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: auth
+      template:
+        metadata:
+          labels:
+            app: auth
+        spec:
+          containers:
+            - name: auth
+              image: auth:latest
+              imagePullPolicy: Never
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+                limits:
+                  cpu: 100m
+                  memory: 100Mi
+              env:
+                - name: DB_HOST
+                  value: "mysql.default.svc.cluster.local"
+                - name: DB_USER
+                  value: "budgetbook"
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: mysql
+                      key: mysql-password
+                - name: DB_NAME
+                  value: "budgetbook"
+                - name: DB_PORT
+                  value: "3306"
+                - name: GOOGLE_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: budgetbook
+                      key: GOOGLE_CLIENT_ID
+                - name: GOOGLE_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: budgetbook
+                      key: GOOGLE_CLIENT_SECRET
+                - name: GOOGLE_CALLBACK_URL
+                  value: "https://budgetbook.me/api/auth/google/redirect"
+                - name: REDIRECT_HOST
+                  value: "https://budgetbook.me"
+                - name: JWT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: budgetbook
+                      key: JWT_SECRET
+  service:
+    metadata:
+      name: auth
+    spec:
+      selector:
+        app: auth
+      ports:
+        - name: "http"
+          port: 3000
+          targetPort: 3000
 
-image: 
-  name: auth
-  tag: latest
-  pullPolicy: Never
+expense:
+  deployment:
+    metadata:
+      name: expense
+      namespace: test2
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: expense
+      template:
+        metadata:
+          labels:
+            app: expense
+        spec:
+          containers:
+            - image:
+                name: expense
+                tag: latest
+                PullPolicy: Never
+              resources:
+                cpu:
+                  requests: 100m
+                  limits: 100m
+                memory:
+                  requests: 100Mi
+                  limits: 100Mi
+              env:
+                - name: DB_HOST
+                  value: "mysql.default.svc.cluster.local"
+                - name: DB_USER
+                  value: "budgetbook"
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: mysql
+                      key: mysql-password
+                - name: DB_NAME
+                  value: "budgetbook"
+                - name: DB_PORT
+                  value: "3306"
+                - name: JWT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: budgetbook
+                      key: JWT_SECRET
+  service:
+    metadata:
+      name: expense
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
+        prometheus.io/path: "/api/metrics"
+        prometheus.io/port: "3000"
+    spec:
+      selector:
+        app: expense
+      ports:
+        - name: "http"
+          port: 3000
+          targetPort: 3000   
 
-resources:
-  cpu:
-    requests: 100m
-    limits: 100m
-  memory:
-    requests: 100Mi
-    limits: 100Mi
+frontend:
+  deployment:
+    metadata:
+      name: frontend
+      namespace: test2
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: frontend
+      template:
+        metadata:
+          labels:
+            app: frontend
+        spec:
+          containers:
+            - image: frontend:latest
+              imagePullPolicy: Never
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+                limits:
+                  cpu: 100m
+                  memory: 100Mi
+              name: frontend
+              ports:
+                - containerPort: 80
+                  protocol: TCP
+          restartPolicy: Always
 
-env:
-  - name: DB_HOST
-    value: "mysql.default.svc.cluster.local"
-  - name: DB_USER
-    value: "budgetbook"
-  - name: DB_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: mysql
-        key: mysql-password
-  - name: DB_NAME
-    value: "budgetbook"
-  - name: DB_PORT
-    value: "3306"
-  - name: GOOGLE_CLIENT_ID
-    valueFrom:
-      secretKeyRef:
-        name: budgetbook
-        key: GOOGLE_CLIENT_ID
-  - name: GOOGLE_CLIENT_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: budgetbook
-        key: GOOGLE_CLIENT_SECRET
-  - name: GOOGLE_CALLBACK_URL
-    value: "https://budgetbook.me/api/auth/google/redirect"
-  - name: REDIRECT_HOST
-    value: "https://budgetbook.me"
-  - name: JWT_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: budgetbook
-        key: JWT_SECRET
-
-ports:
-  containerPort: 3000
-  protocol: TCP
-restartPolicy: Always
-
-service:
-  ports:
-      name: http
-      port: 3000
-      targetPort: 3000
+statistics:
+  deployment:
+    metadata:
+      name: statistics
+      namespace: test2
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: statistics
+      template:
+        metadata:
+          labels:
+            app: statistics
+        spec:
+          containers:
+            - image: statistics:latest
+              imagePullPolicy: Never
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+                limits:
+                  cpu: 100m
+                  memory: 100Mi
+              env:
+                - name: DB_HOST
+                  value: "mysql.default.svc.cluster.local"
+                - name: DB_USER
+                  value: "budgetbook"
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: mysql
+                      key: mysql-password
+                - name: DB_NAME
+                  value: "budgetbook"
+                - name: DB_PORT
+                  value: "3306"
+                - name: JWT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: budgetbook
+                      key: JWT_SECRET
+  service:
+    metadata:
+      name: statistics
+    spec:
+      selector:
+        app: statistics
+      ports:
+        - name: "http"
+          port: 3000
+          targetPort: 3000

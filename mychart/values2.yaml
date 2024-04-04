@@ -1,66 +1,78 @@
 auth:
-  app:
-    name: auth
-    replicaCount: 1
-    namespace: test2
-  
-  image: 
-    name: auth
-    tag: latest
-    pullPolicy: Never
-  
-  resources:
-    cpu:
-      requests: 100m
-      limits: 100m
-    memory:
-      requests: 100Mi
-      limits: 100Mi
-  
-  env:
-    - name: DB_HOST
-      value: "mysql.default.svc.cluster.local"
-    - name: DB_USER
-      value: "budgetbook"
-    - name: DB_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: mysql
-          key: mysql-password
-    - name: DB_NAME
-      value: "budgetbook"
-    - name: DB_PORT
-      value: "3306"
-    - name: GOOGLE_CLIENT_ID
-      valueFrom:
-        secretKeyRef:
-          name: budgetbook
-          key: GOOGLE_CLIENT_ID
-    - name: GOOGLE_CLIENT_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: budgetbook
-          key: GOOGLE_CLIENT_SECRET
-    - name: GOOGLE_CALLBACK_URL
-      value: "https://budgetbook.me/api/auth/google/redirect"
-    - name: REDIRECT_HOST
-      value: "https://budgetbook.me"
-    - name: JWT_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: budgetbook
-          key: JWT_SECRET
-  
-  ports:
-    containerPort: 3000
-    protocol: TCP
-  restartPolicy: Always
-  
+  deployment:
+    metadata:
+      name: auth
+      namespace: test2
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: auth
+      template:
+        metadata:
+          labels:
+            app: auth
+        spec:
+          containers:
+            - name: auth
+              image: auth:latest
+              imagePullPolicy: Never
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+                limits:
+                  cpu: 100m
+                  memory: 100Mi
+              env:
+                - name: DB_HOST
+                  value: "mysql.default.svc.cluster.local"
+                - name: DB_USER
+                  value: "budgetbook"
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: mysql
+                      key: mysql-password
+                - name: DB_NAME
+                  value: "budgetbook"
+                - name: DB_PORT
+                  value: "3306"
+                - name: GOOGLE_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: budgetbook
+                      key: GOOGLE_CLIENT_ID
+                - name: GOOGLE_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: budgetbook
+                      key: GOOGLE_CLIENT_SECRET
+                - name: GOOGLE_CALLBACK_URL
+                  value: "https://budgetbook.me/api/auth/google/redirect"
+                - name: REDIRECT_HOST
+                  value: "https://budgetbook.me"
+                - name: JWT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: budgetbook
+                      key: JWT_SECRET
+              ports:
+                - containerPort: 3000
+                  protocol: TCP
+          restartPolicy: Always        
+
   service:
-    ports:
-        name: http
-        port: 3000
-        targetPort: 3000
+    metadata:
+      name: auth
+    spec:
+      selector:
+        app: auth
+      ports:
+        - name: "http"
+          port: 3000
+          targetPort: 3000
+
 expense:
   deployment:
     metadata:
@@ -125,7 +137,40 @@ service:
       ports:
         - name: "http"
           port: 3000
-          targetPort: 3000    
+          targetPort: 3000   
+
+frontend:
+  deployment:
+    metadata:
+      name: frontend
+      namespace: test2
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: frontend
+      template:
+        metadata:
+          labels:
+            app: frontend
+        spec:
+          containers:
+            - image: frontend:latest
+              imagePullPolicy: Never
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+                limits:
+                  cpu: 100m
+                  memory: 100Mi
+              name: frontend
+              ports:
+                - containerPort: 80
+                  protocol: TCP
+          restartPolicy: Always
+
+ 
 
 ingress:
   metadata:
